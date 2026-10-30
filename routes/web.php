@@ -1,8 +1,10 @@
+
 <?php
 
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LoanController;
+use App\Http\Controllers\ActivityLogController;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Loan;
@@ -25,7 +27,12 @@ Route::get('/dashboard', function () {
 
     $activeLoans = Loan::where('status', 'dipinjam')->count();
 
+    // Anggota hanya melihat peminjaman miliknya sendiri
     $latestLoans = Loan::with(['user', 'book'])
+        ->when(
+            auth()->user()->role !== 'admin',
+            fn ($query) => $query->where('user_id', auth()->id())
+        )
         ->latest()
         ->take(5)
         ->get();
@@ -40,24 +47,45 @@ Route::get('/dashboard', function () {
     ));
 })->middleware('auth')->name('dashboard');
 
-// Semua fitur hanya dapat diakses setelah login
+// Semua fitur membutuhkan login
 Route::middleware('auth')->group(function () {
 
-    // CRUD buku
-    Route::resource('books', BookController::class);
+    // BUKU
 
-    // CRUD kategori
-    Route::resource('categories', CategoryController::class);
+    // Semua pengguna boleh melihat buku
+    Route::get('/books', [BookController::class, 'index'])
+        ->name('books.index');
 
-    // Daftar peminjaman
+    Route::get('/books/{book}', [BookController::class, 'show'])
+        ->name('books.show');
+
+    // Hanya SuperAdmin yang boleh mengelola buku
+    Route::middleware('admin')->group(function () {
+
+        Route::resource('books', BookController::class)
+            ->except(['index', 'show']);
+
+        // KATEGORI
+
+        Route::resource('categories', CategoryController::class);
+
+        // ACTIVITY LOG
+
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+            ->name('activity-logs.index');
+    });
+
+    // PEMINJAMAN
+
+    // Anggota dan SuperAdmin boleh melihat halaman peminjaman
     Route::get('/loans', [LoanController::class, 'index'])
         ->name('loans.index');
 
-    // Form peminjaman
+    // Form pengajuan peminjaman
     Route::get('/loans/create', [LoanController::class, 'create'])
         ->name('loans.create');
 
-    // Simpan peminjaman
+    // Proses pengajuan peminjaman
     Route::post('/loans', [LoanController::class, 'store'])
         ->name('loans.store');
 
@@ -66,31 +94,35 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('loan')
         ->name('loans.show');
 
-    // Edit transaksi
-    Route::get('/loans/{loan}/edit', [LoanController::class, 'edit'])
-        ->whereNumber('loan')
-        ->name('loans.edit');
+    // KHUSUS SUPERADMIN
 
-    // Update transaksi
-    Route::put('/loans/{loan}', [LoanController::class, 'update'])
-        ->whereNumber('loan')
-        ->name('loans.update');
+    Route::middleware('admin')->group(function () {
 
-    // Update transaksi dengan PATCH
-    Route::patch('/loans/{loan}', [LoanController::class, 'update'])
-        ->whereNumber('loan')
-        ->name('loans.patch');
+        // Edit transaksi
+        Route::get('/loans/{loan}/edit', [LoanController::class, 'edit'])
+            ->whereNumber('loan')
+            ->name('loans.edit');
 
-    // Hapus transaksi
-    Route::delete('/loans/{loan}', [LoanController::class, 'destroy'])
-        ->whereNumber('loan')
-        ->name('loans.destroy');
+        // Update transaksi
+        Route::put('/loans/{loan}', [LoanController::class, 'update'])
+            ->whereNumber('loan')
+            ->name('loans.update');
 
-    // Pengembalian buku
-    Route::post('/loans/{loan}/return', [
-        LoanController::class,
-        'returnBook',
-    ])->whereNumber('loan')->name('loans.return');
+        Route::patch('/loans/{loan}', [LoanController::class, 'update'])
+            ->whereNumber('loan')
+            ->name('loans.patch');
+
+        // Hapus transaksi
+        Route::delete('/loans/{loan}', [LoanController::class, 'destroy'])
+            ->whereNumber('loan')
+            ->name('loans.destroy');
+
+        // Memproses pengembalian buku
+        Route::post('/loans/{loan}/return', [
+            LoanController::class,
+            'returnBook',
+        ])->whereNumber('loan')->name('loans.return');
+    });
 });
 
 // Autentikasi Laravel Breeze

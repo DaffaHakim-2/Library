@@ -57,21 +57,41 @@
                 </a>
 
                 {{-- Menu khusus admin --}}
-                @if (Auth::user()->role === 'admin')
+                    @if (Auth::user()->role === 'admin')
 
-                    <a
-                        href="{{ route('categories.index') }}"
-                        title="Kategori"
-                        class="flex items-center px-4 py-3 rounded-lg
-                        {{ request()->routeIs('categories.*') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
+                        {{-- Manajemen Kategori --}}
+                        <a
+                            href="{{ route('categories.index') }}"
+                            title="Manajemen Kategori"
+                            class="flex items-center px-4 py-3 rounded-lg
+                            {{ request()->routeIs('categories.*')
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
 
-                        <span class="text-xl flex-shrink-0">▤</span>
-                        <span class="sidebar-text ml-3 whitespace-nowrap">
-                            Kategori
-                        </span>
-                    </a>
+                            <span class="text-xl flex-shrink-0">📂</span>
 
-                @endif
+                            <span class="sidebar-text ml-3 whitespace-nowrap">
+                                Manajemen Kategori
+                            </span>
+                        </a>
+
+                        {{-- Activity Log --}}
+                        <a
+                            href="{{ route('activity-logs.index') }}"
+                            title="Activity Log"
+                            class="flex items-center px-4 py-3 rounded-lg
+                            {{ request()->routeIs('activity-logs.*')
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
+
+                            <span class="text-xl flex-shrink-0">📋</span>
+
+                            <span class="sidebar-text ml-3 whitespace-nowrap">
+                                Activity Log
+                            </span>
+                        </a>
+
+                    @endif
 
                 {{-- Peminjaman --}}
                 <a
@@ -167,14 +187,22 @@
                 <h2 class="text-lg font-semibold text-gray-800">
                     @if (request()->routeIs('dashboard'))
                         Dashboard
+
                     @elseif (request()->routeIs('categories.*'))
                         Manajemen Kategori
+
                     @elseif (request()->routeIs('books.*'))
                         {{ Auth::user()->role === 'admin' ? 'Manajemen Buku' : 'Katalog Buku' }}
+
                     @elseif (request()->routeIs('loans.*'))
                         {{ Auth::user()->role === 'admin' ? 'Manajemen Peminjaman' : 'Peminjaman Saya' }}
+
+                    @elseif (request()->routeIs('activity-logs.*'))
+                        Activity Log
+
                     @elseif (request()->routeIs('profile.*'))
                         Profil Saya
+
                     @else
                         Sistem Perpustakaan
                     @endif

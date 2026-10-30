@@ -45,10 +45,12 @@
                         </a>
                     </form>
 
-                    <a href="{{ route('books.create') }}"
-                       class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded">
-                        + Tambah Buku
-                    </a>
+                    @if (Auth::user()->role === 'admin')
+                        <a href="{{ route('books.create') }}"
+                        class="bg-blue-600 text-white px-4 py-2 rounded">
+                            + Tambah Buku
+                        </a>
+                    @endif
                 </div>
 
                 <div class="overflow-x-auto">
@@ -137,13 +139,13 @@
                              a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
                              M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3
                              M4 7h16" />
-                </svg>
-                Hapus
-            </button>
-        </form>
+                            </svg>
+                            Hapus
+                        </button>
+                    </form>
 
-    </div>
-</td>
+                </div>
+            </td>
                                 </tr>
                             @empty
                                 <tr>
